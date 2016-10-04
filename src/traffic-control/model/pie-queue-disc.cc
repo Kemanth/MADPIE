@@ -97,16 +97,6 @@ TypeId PieQueueDisc::GetTypeId (void)
                    TimeValue (Seconds (0.1)),
                    MakeTimeAccessor (&PieQueueDisc::m_maxBurst),
                    MakeTimeChecker ())
-    .AddAttribute ("MADPIE",
-                   "True to enable MADPIE",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&PieQueueDisc::m_isMADPIE),
-                   MakeBooleanChecker ())
-    .AddAttribute ("UserSpecifiedDelay",
-                   "MADPIE Parameter",
-                   TimeValue (Seconds (0.30)),
-                   MakeTimeAccessor (&PieQueueDisc::m_TDD),
-                   MakeTimeChecker ())
   ;
 
   return tid;
@@ -217,14 +207,6 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       m_stats.unforcedDrop++;
       return false;
     }
-  else if(m_isMADPIE && m_pMax)
-    {
-        // deterministic drop
-        Drop (item);
-        m_stats.unforcedDrop++;
-        m_pMax = false;
-        return false;
-    }
 
   // No drop
   bool retval = GetInternalQueue (0)->Enqueue (item);
@@ -251,8 +233,6 @@ PieQueueDisc::InitializeParams (void)
   m_qDelayOld = Time (Seconds (0));
   m_stats.forcedDrop = 0;
   m_stats.unforcedDrop = 0;
-  m_pMax = false;
-// m_TDD = Time (Seconds (0.030));
 }
 
 bool PieQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
@@ -323,14 +303,6 @@ void PieQueueDisc::CalculateP ()
     }
 
   m_qDelay = qDelay;
-  if (m_qDelay > m_TDD)
-  {
-        m_pMax = true;
-  }
-  else
-  {
-        m_pMax= false;
-  }
 
   if (m_burstAllowance.GetSeconds () > 0)
     {

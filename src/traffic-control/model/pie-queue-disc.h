@@ -183,8 +183,6 @@ private:
   double m_a;                                   //!< Parameter to pie controller
   double m_b;                                   //!< Parameter to pie controller
   uint32_t m_dqThreshold;                       //!< Minimum queue size in bytes before dequeue rate is measured
-  bool m_isMADPIE;                              //!< To enable MADPIE
-  Time m_TDD;                                   //!< parameter to MADPIE
 
   // ** Variables maintained by PIE
   double m_dropProb;                            //!< Variable used in calculation of drop probability
@@ -197,7 +195,6 @@ private:
   double m_avgDqRate;                           //!< Time averaged dequeue rate
   double m_dqStart;                             //!< Start timestamp of current measurement cycle
   uint32_t m_dqCount;                           //!< Number of bytes departed since current measurement cycle starts
-  bool m_pMax;                                  //!< used to decide whether to deterministically drop a packet    
   EventId m_rtrsEvent;                          //!< Event used to decide the decision of interval of drop probability calculation
   Ptr<UniformRandomVariable> m_uv;              //!< Rng stream
 };
