@@ -102,11 +102,16 @@ TypeId PieQueueDisc::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&PieQueueDisc::m_isMADPIE),
                    MakeBooleanChecker ())
-    .AddAttribute ("UserSpecifiedDelay",
+    .AddAttribute ("HardDelay",
                    "MADPIE Parameter",
                    TimeValue (Seconds (0.30)),
                    MakeTimeAccessor (&PieQueueDisc::m_TDD),
                    MakeTimeChecker ())
+    .AddAttribute ("PMAX",
+                   "True to enable deterministic drop",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&PieQueueDisc::m_pMax),
+                   MakeBooleanChecker ())
   ;
 
   return tid;
