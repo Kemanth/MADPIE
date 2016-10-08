@@ -69,7 +69,7 @@ TypeId PieQueueDisc::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("Tupdate",
                    "Time period to calculate drop probability",
-                   TimeValue (Seconds (0.03)),
+                   TimeValue (Seconds (0.030)),
                    MakeTimeAccessor (&PieQueueDisc::m_tUpdate),
                    MakeTimeChecker ())
     .AddAttribute ("Supdate",
@@ -102,9 +102,9 @@ TypeId PieQueueDisc::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&PieQueueDisc::m_isMADPIE),
                    MakeBooleanChecker ())
-    .AddAttribute ("HardDelay",
+    .AddAttribute ("QueueDelayHard",
                    "MADPIE Parameter",
-                   TimeValue (Seconds (0.30)),
+                   TimeValue (Seconds (0.030)),
                    MakeTimeAccessor (&PieQueueDisc::m_TDD),
                    MakeTimeChecker ())
     .AddAttribute ("PMAX",
@@ -254,9 +254,10 @@ PieQueueDisc::InitializeParams (void)
   m_dqStart = 0;
   m_burstState = NO_BURST;
   m_qDelayOld = Time (Seconds (0));
-  m_pMax = false;
   m_stats.forcedDrop = 0;
   m_stats.unforcedDrop = 0;
+// m_pMax = false;
+// m_TDD = Time (Seconds (0.030));
 }
 
 bool PieQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
@@ -331,10 +332,11 @@ void PieQueueDisc::CalculateP ()
   {
         m_pMax = true;
   }
-  else
+ /* else
   {
         m_pMax= false;
   }
+*/
 
   if (m_burstAllowance.GetSeconds () > 0)
     {

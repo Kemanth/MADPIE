@@ -141,7 +141,7 @@ main (int argc, char *argv[])
 
   std::string pieLinkDataRate = "1.5Mbps";
   std::string pieLinkDelay = "20ms";
-
+  std::string piequeueDiscType = "PIE";
   std::string pathOut;
   bool writeForPlot = false;
   bool writePcap = false;
@@ -164,8 +164,16 @@ main (int argc, char *argv[])
   cmd.AddValue ("writeForPlot", "<0/1> to write results for plot (gnuplot)", writeForPlot);
   cmd.AddValue ("writePcap", "<0/1> to write results in pcapfile", writePcap);
   cmd.AddValue ("writeFlowMonitor", "<0/1> to enable Flow Monitor and write their results", flowMonitor);
+  cmd.AddValue ("piequeueDiscType", "Set Queue disc type to PIE or MADPIE", piequeueDiscType);
 
   cmd.Parse (argc, argv);
+ 
+  if ((piequeueDiscType != "PIE") && (piequeueDiscType != "MADPIE"))
+    {
+      std::cout << "Invalid queue disc type: Use --piequeueDiscType=PIE or --piequeueDiscType=MADPIE" << std::endl;
+      exit (1);
+    }
+ 
 
   NS_LOG_INFO ("Create nodes");
   NodeContainer c;
@@ -198,6 +206,14 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::PieQueueDisc::QueueDelayReference", TimeValue (Seconds (0.02)));
   Config::SetDefault ("ns3::PieQueueDisc::MaxBurstAllowance", TimeValue (Seconds (0.1)));
   Config::SetDefault ("ns3::PieQueueDisc::QueueLimit", UintegerValue (100));
+  
+  if (piequeueDiscType == "MADPIE")
+    {
+      // Turn on MADPIE
+      Config::SetDefault ("ns3::PieQueueDisc::MADPIE", BooleanValue (true));
+      Config::SetDefault ("ns3::PieQueueDisc::QueueDelayHard", TimeValue(Seconds(0.030)));
+    }
+
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -311,6 +327,7 @@ main (int argc, char *argv[])
       std::cout << "There should be no drops due to queue full." << std::endl;
       exit (-1);
     }
+ 
 
   if (flowMonitor)
     {
