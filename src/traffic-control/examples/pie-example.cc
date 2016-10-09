@@ -141,7 +141,7 @@ main (int argc, char *argv[])
 
   std::string pieLinkDataRate = "1.5Mbps";
   std::string pieLinkDelay = "20ms";
-  std::string piequeueDiscType = "PIE";
+  std::string queueDiscType = "PIE";
   std::string pathOut;
   bool writeForPlot = false;
   bool writePcap = false;
@@ -164,13 +164,13 @@ main (int argc, char *argv[])
   cmd.AddValue ("writeForPlot", "<0/1> to write results for plot (gnuplot)", writeForPlot);
   cmd.AddValue ("writePcap", "<0/1> to write results in pcapfile", writePcap);
   cmd.AddValue ("writeFlowMonitor", "<0/1> to enable Flow Monitor and write their results", flowMonitor);
-  cmd.AddValue ("piequeueDiscType", "Set Queue disc type to PIE or MADPIE", piequeueDiscType);
+  cmd.AddValue ("queueDiscType", "Set Queue disc type to PIE or MADPIE", queueDiscType);
 
   cmd.Parse (argc, argv);
  
-  if ((piequeueDiscType != "PIE") && (piequeueDiscType != "MADPIE"))
+  if ((queueDiscType != "PIE") && (queueDiscType != "MADPIE"))
     {
-      std::cout << "Invalid queue disc type: Use --piequeueDiscType=PIE or --piequeueDiscType=MADPIE" << std::endl;
+      std::cout << "Invalid queue disc type: Use --queueDiscType=PIE or --queueDiscType=MADPIE" << std::endl;
       exit (1);
     }
  
@@ -207,13 +207,11 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::PieQueueDisc::MaxBurstAllowance", TimeValue (Seconds (0.1)));
   Config::SetDefault ("ns3::PieQueueDisc::QueueLimit", UintegerValue (100));
   
-  if (piequeueDiscType == "MADPIE")
+  if (queueDiscType == "MADPIE")
     {
       // Turn on MADPIE
       Config::SetDefault ("ns3::PieQueueDisc::MADPIE", BooleanValue (true));
-      Config::SetDefault ("ns3::PieQueueDisc::QueueDelayHard", TimeValue(Seconds(0.030)));
     }
-
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -342,6 +340,7 @@ main (int argc, char *argv[])
       std::cout << "*** PIE stats from Node 2 queue ***" << std::endl;
       std::cout << "\t " << st.unforcedDrop << " drops due to prob mark" << std::endl;
       std::cout << "\t " << st.forcedDrop << " drops due to queue limits" << std::endl;
+      std::cout << "\t " << st.deterministicDrop << " deterministic drops due to MADPIE" << std::endl;
     }
 
   Simulator::Destroy ();
