@@ -69,7 +69,7 @@ TypeId PieQueueDisc::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("Tupdate",
                    "Time period to calculate drop probability",
-                   TimeValue (Seconds (0.030)),
+                   TimeValue (Seconds (0.03)),
                    MakeTimeAccessor (&PieQueueDisc::m_tUpdate),
                    MakeTimeChecker ())
     .AddAttribute ("Supdate",
@@ -103,15 +103,10 @@ TypeId PieQueueDisc::GetTypeId (void)
                    MakeBooleanAccessor (&PieQueueDisc::m_isMADPIE),
                    MakeBooleanChecker ())
     .AddAttribute ("QueueDelayHard",
-                   "MADPIE Parameter",
-                   TimeValue (Seconds (0.030)),
-                   MakeTimeAccessor (&PieQueueDisc::m_TDD),
+                   "Hard queue delay. MADPIE starts deterministic packet drops after this",
+                   TimeValue (Seconds (0.03)),
+                   MakeTimeAccessor (&PieQueueDisc::m_qDelayHard),
                    MakeTimeChecker ())
-    .AddAttribute ("PMAX",
-                   "True to enable deterministic drop",
-                   BooleanValue (false),
-                   MakeBooleanAccessor (&PieQueueDisc::m_pMax),
-                   MakeBooleanChecker ())
   ;
 
   return tid;
@@ -215,20 +210,23 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       m_stats.forcedDrop++;
       return false;
     }
-  else if (DropEarly (item, nQueued))
+  else
     {
-      // Early probability drop: proactive
-      Drop (item);
-      m_stats.unforcedDrop++;
-      return false;
-    }
-  else if(m_isMADPIE && m_pMax)
-    {
-        // deterministic drop
-        Drop (item);
-        m_stats.unforcedDrop++;
-        m_pMax = false;
-        return false;
+      if (DropEarly (item, nQueued))
+        {
+          // Early probability drop: proactive
+          Drop (item);
+          m_stats.unforcedDrop++;
+          return false;
+        }
+      else if (m_isMADPIE && m_maxProb)
+        {
+          // Deterministic drop in MADPIE: hard
+          Drop (item);
+          m_stats.deterministicDrop++;
+          m_maxProb = false;
+          return false;
+        }
     }
 
   // No drop
@@ -256,8 +254,8 @@ PieQueueDisc::InitializeParams (void)
   m_qDelayOld = Time (Seconds (0));
   m_stats.forcedDrop = 0;
   m_stats.unforcedDrop = 0;
-// m_pMax = false;
-// m_TDD = Time (Seconds (0.030));
+  m_stats.deterministicDrop = 0;
+  m_maxProb = false;
 }
 
 bool PieQueueDisc::DropEarly (Ptr<QueueDiscItem> item, uint32_t qSize)
@@ -328,15 +326,6 @@ void PieQueueDisc::CalculateP ()
     }
 
   m_qDelay = qDelay;
-  if (m_qDelay > m_TDD)
-  {
-        m_pMax = true;
-  }
- /* else
-  {
-        m_pMax= false;
-  }
-*/
 
   if (m_burstAllowance.GetSeconds () > 0)
     {
@@ -376,6 +365,13 @@ void PieQueueDisc::CalculateP ()
     }
 
   p += m_dropProb;
+
+  // For deterministic drop in MADPIE
+  
+  if (m_qDelay.GetSeconds () > m_qDelayHard.GetSeconds ())
+    {
+      m_maxProb = true;
+    }
 
   // For non-linear drop in prob
 

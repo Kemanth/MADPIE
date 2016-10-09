@@ -76,6 +76,7 @@ public:
   {
     uint32_t unforcedDrop;      //!< Early probability drops: proactive
     uint32_t forcedDrop;        //!< Drops due to queue limit: reactive
+    uint32_t deterministicDrop; //!< Deterministic drops in MADPIE: hard
   } Stats;
 
   /**
@@ -183,9 +184,12 @@ private:
   double m_a;                                   //!< Parameter to pie controller
   double m_b;                                   //!< Parameter to pie controller
   uint32_t m_dqThreshold;                       //!< Minimum queue size in bytes before dequeue rate is measured
+  bool m_isMADPIE;                              //!< True to enable MADPIE
+  Time m_qDelayHard;                            //!< Hard queue delay; MADPIE starts deterministic packet drops after this
 
   // ** Variables maintained by PIE
   double m_dropProb;                            //!< Variable used in calculation of drop probability
+  bool m_maxProb;                               //!< True to deterministically drop packets in MADPIE
   Time m_qDelayOld;                             //!< Old value of queue delay
   Time m_qDelay;                                //!< Current value of queue delay
   Time m_burstAllowance;                        //!< Current max burst value in seconds that is allowed before random drops kick in
