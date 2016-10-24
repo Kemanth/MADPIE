@@ -220,6 +220,9 @@ PieQueueDiscTestCase::RunPieTest (StringValue mode)
   Config::SetDefault ("ns3::PieQueueDisc::MaxBurstAllowance", TimeValue (Seconds (0.1)));
   Config::SetDefault ("ns3::PieQueueDisc::QueueLimit", UintegerValue (qSize));
 
+  
+  
+
   InternetStackHelper internet;
   internet.Install (c);
 
@@ -327,11 +330,27 @@ PieQueueDiscTestCase::RunPieTest (StringValue mode)
   clientApps2.Stop (Seconds (client_stop_time));
 
   Simulator::Stop (Seconds (sink_stop_time));
-  Simulator::Run ();
+ /* Simulator::Run ();
 
   PieQueueDisc::Stats st = StaticCast<PieQueueDisc> (queueDiscs.Get (0))->GetStats ();
-
+  uint32_t PIE_UnforcedDrops=st.unforcedDrop;
   NS_TEST_EXPECT_MSG_NE (st.unforcedDrop, 0, "There should be some packets dropped due to prob mark");
+  NS_TEST_EXPECT_MSG_EQ (st.forcedDrop, 0, "There should be zero packets dropped due to queue limit");
+
+  Simulator::Destroy ();
+*/
+  // test 3: MADPIE test in a simple dumbbell topology
+  
+  //MADPIE params
+  
+  NS_TEST_EXPECT_MSG_EQ (queue->SetAttributeFailSafe ("MADPIE", BooleanValue (true)), true,
+                         "Verify that we can actually set the attribute MADPIE");
+  //Config::SetDefault ("ns3::PieQueueDisc::MADPIE", BooleanValue (true));
+  Config::SetDefault ("ns3::PieQueueDisc::QueueDelayHard", TimeValue (Seconds (0.03)));
+  Simulator::Run ();
+  PieQueueDisc::Stats st = StaticCast<PieQueueDisc> (queueDiscs.Get (0))->GetStats ();
+  uint32_t MADPIE_UnforcedDrops=st.unforcedDrop;
+  NS_TEST_EXPECT_MSG_NE (MADPIE_UnforcedDrops, 0, "There should be some packets dropped due to prob mark");
   NS_TEST_EXPECT_MSG_EQ (st.forcedDrop, 0, "There should be zero packets dropped due to queue limit");
 
   Simulator::Destroy ();
