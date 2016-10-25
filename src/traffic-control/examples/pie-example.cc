@@ -40,12 +40,16 @@
 #include "ns3/applications-module.h"
 #include "ns3/traffic-control-module.h"
 
+
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("PieExample");
 
 uint32_t checkTimes;
+uint32_t checkTime;
 double avgQueueDiscSize;
+ns3::Time avgQueueDelay;
 
 // The times
 double global_start_time;
@@ -69,6 +73,8 @@ Ipv4InterfaceContainer i3i5;
 
 std::stringstream filePlotQueueDisc;
 std::stringstream filePlotQueueDiscAvg;
+std::stringstream filePlotQueueDelay;
+std::stringstream filePlotQueueDelayAvg;
 
 void
 CheckQueueDiscSize (Ptr<QueueDisc> queue)
@@ -89,6 +95,27 @@ CheckQueueDiscSize (Ptr<QueueDisc> queue)
   fPlotQueueDiscAvg << Simulator::Now ().GetSeconds () << " " << avgQueueDiscSize / checkTimes << std::endl;
   fPlotQueueDiscAvg.close ();
 }
+
+void
+CheckQueueDelay (Ptr<QueueDisc> queue)
+{
+  Time qDelay = StaticCast<PieQueueDisc> (queue)->GetQueueDelay ();
+
+  avgQueueDelay += qDelay;
+  checkTime++;
+
+  // check queue delay  every 3/10 of a second
+  Simulator::Schedule (Seconds (0.3), &CheckQueueDelay, queue);
+
+  std::ofstream fPlotQueueDelay (filePlotQueueDelay.str ().c_str (), std::ios::out | std::ios::app);
+  fPlotQueueDelay << Simulator::Now ().GetSeconds () << " " << qDelay << std::endl;
+  fPlotQueueDelay.close ();
+
+  std::ofstream fPlotQueueDelayAvg (filePlotQueueDelayAvg.str ().c_str (), std::ios::out | std::ios::app);
+  fPlotQueueDelayAvg << Simulator::Now ().GetSeconds () << " " << avgQueueDelay / checkTime << std::endl;
+  fPlotQueueDelayAvg.close ();
+}
+
 
 void
 BuildAppsTest ()
@@ -114,7 +141,7 @@ BuildAppsTest ()
   clientHelper1.SetAttribute ("DataRate", DataRateValue (DataRate ("10Mb/s")));
 
   // Connection two
-  OnOffHelper clientHelper2 ("ns3::TcpSocketFactory", Address ());
+  OnOffHelper clientHelper2 ("ns3::TcpSocketFactory", Address ());//
   clientHelper2.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   clientHelper2.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   clientHelper2.SetAttribute ("PacketSize", UintegerValue (1000));
@@ -143,7 +170,7 @@ main (int argc, char *argv[])
   std::string pieLinkDelay = "20ms";
   std::string queueDiscType = "PIE";
   std::string pathOut;
-  bool writeForPlot = false;
+  bool writeForPlot = true;
   bool writePcap = false;
   bool flowMonitor = false;
 
@@ -190,7 +217,8 @@ main (int argc, char *argv[])
   n3n4 = NodeContainer (c.Get (3), c.Get (4));
   n3n5 = NodeContainer (c.Get (3), c.Get (5));
 
-  Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpNewReno"));
+ Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpNewReno"));
+ // Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpBic"));
   // 42 = headers size
   Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
@@ -308,19 +336,26 @@ main (int argc, char *argv[])
     {
       filePlotQueueDisc << pathOut << "/" << "pie-queue-disc.plotme";
       filePlotQueueDiscAvg << pathOut << "/" << "pie-queue-disc_avg.plotme";
-
+      filePlotQueueDelay << pathOut << "/" << "pie-queue-delay.plotme";
+      filePlotQueueDelayAvg << pathOut << "/" << "pie-queue-delay_avg.plotme";
+      
       remove (filePlotQueueDisc.str ().c_str ());
       remove (filePlotQueueDiscAvg.str ().c_str ());
+      remove (filePlotQueueDelay.str ().c_str ());
+      remove (filePlotQueueDelayAvg.str ().c_str ());
       Ptr<QueueDisc> queue = queueDiscs.Get (0);
       Simulator::ScheduleNow (&CheckQueueDiscSize, queue);
+      Simulator::ScheduleNow (&CheckQueueDelay, queue);
     }
+ 
 
+  
   Simulator::Stop (Seconds (sink_stop_time));
   Simulator::Run ();
 
   PieQueueDisc::Stats st = StaticCast<PieQueueDisc> (queueDiscs.Get (0))->GetStats ();
 
-  if (st.forcedDrop != 0)
+ if (st.forcedDrop != 0)
     {
       std::cout << "There should be no drops due to queue full." << std::endl;
       exit (-1);
