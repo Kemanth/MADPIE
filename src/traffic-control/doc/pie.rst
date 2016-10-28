@@ -11,11 +11,12 @@ Proportional Integral controller Enhanced (PIE) is a queuing discipline that aim
 solve the bufferbloat [Buf14]_ problem. The model in ns-3 is a port of Preethi
 Natarajan's ns-2 PIE model.
 
+MADPIE extension of PIE
+-----------------------
+
 Maximum and Average queuing Delay with Proportional Integral controller Enhanced (MADPIE)
-=========================================================================================
-
-Maximum and Average queuing Delay with Proportional Integral controller Enhanced (MADPIE) is an extension of PIE [1], that adds deterministic packet drops at controlled intervals.
-
+[Kuhn16]_ is an extension of PIE, that adds deterministic packet drops at controlled
+intervals.
 
 Model Description
 *****************
@@ -43,7 +44,7 @@ References
 
 .. [Pan16] R. Pan, P. Natarajan, F. Baker, G. White, B. VerSteeg, M.S. Prabhu, C. Piglione, V. Subramanian, Internet-Draft: PIE: A lightweight control scheme to address the bufferbloat problem, April 2016.  Available online at `<https://tools.ietf.org/html/draft-ietf-aqm-pie-07>`_.
 
-.. [1] Kuhn, N., & Ros, D. (2016). Improving PIE's performance over high-delay paths. arXiv preprint arXiv:1602.00569.
+.. [Kuhn16] Kuhn, N., & Ros, D. (2016). Improving PIE's performance over high-delay paths. Available online at `<https://arxiv.org/abs/1602.00569>`_.
 
 .. [Buf14] Bufferbloat.net.  Available online at `<http://www.bufferbloat.net/>`_.
 
@@ -65,22 +66,17 @@ The key attributes that the PieQueue class holds include the following:
 
 In addition to PIE attributes, MADPIE queue requires following attributes:
 
-* ``MADPIE:`` MADPIE is a boolean attribute sets to true to enable MADPIE. The default value is set to false.
+* ``MADPIE:`` MADPIE is a boolean attribute to enable MADPIE. The default value is set to false.
 * ``DelayHard:`` Hard queue delay; MADPIE starts deterministic packet drops after this. The default value is 30 ms.
-
-
 
 Examples
 ========
 
-The example for PIE is `pie-example.cc` located in ``src/traffic-control/examples``.  To run the file (the first invocation below shows the available
+The example for PIE and MADPIE is `pie-example.cc` located in ``src/traffic-control/examples``.  To run the file (the first invocation below shows the available
 command-line options):
 
 :: 
    
-
-   $ ./waf --run "pie-example --queueDiscType=PIE"
-   $ ./waf --run "pie-example --queueDiscType=MADPIE"
    $ ./waf --run "pie-example --PrintHelp"
    $ ./waf --run "pie-example --writePcap=1" 
 
@@ -107,4 +103,3 @@ or
 ::
 
   $ NS_LOG="PieQueueDisc" ./waf --run "test-runner --suite=pie-queue-disc"
-
