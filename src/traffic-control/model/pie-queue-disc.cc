@@ -210,23 +210,20 @@ PieQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       m_stats.forcedDrop++;
       return false;
     }
-  else
+  else if (DropEarly (item, nQueued))
     {
-      if (DropEarly (item, nQueued))
-        {
-          // Early probability drop: proactive
-          Drop (item);
-          m_stats.unforcedDrop++;
-          return false;
-        }
-      else if (m_isMADPIE && m_maxProb)
-        {
-          // Deterministic drop in MADPIE: hard
-          Drop (item);
-          m_stats.deterministicDrop++;
-          m_maxProb = false;
-          return false;
-        }
+      // Early probability drop: proactive
+      Drop (item);
+      m_stats.unforcedDrop++;
+      return false;
+    }
+  else if (m_isMADPIE && m_maxProb)
+    {
+      // Deterministic drop in MADPIE: hard
+      Drop (item);
+      m_stats.deterministicDrop++;
+      m_maxProb = false;
+      return false;
     }
 
   // No drop
