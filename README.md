@@ -1,4 +1,4 @@
-# Extending PIE qdisc in ns-3 to support MADPIE algorithm
+# Implementation of MADPIE algorithm in ns-3
 
 ## Course Code: CS822
 
