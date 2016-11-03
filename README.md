@@ -6,24 +6,24 @@
 
 ### Overview 
 
-Maximum and Average queuing Delay with Proportional Integral controller Enhanced (MADPIE) [1] is an extension of PIE [2], that adds deterministic packet drops at controlled intervals. This repository provides an implementation of MADPIE in ns-3-dev [3].
+Maximum and Average queuing Delay with Proportional Integral controller Enhanced (MADPIE) [1] is an extension of PIE [2], that adds deterministic packet drops at controlled intervals. This repository provides an implementation of MADPIE in ns-3-dev, changeset 12328 [3].
 
 
 ### Simulating MADPIE
 
 To simulate MADPIE algorithm, the attribute MADPIE must be set to true, as shown below:
 
-Config::SetDefault ("ns3::PieQueueDisc::MADPIE", BooleanValue (true)); 
+`Config::SetDefault ("ns3::PieQueueDisc::MADPIE", BooleanValue (true));`
 
 ### MADPIE example
 
 An example program for MADPIE has been provided in
 
-src/traffic-control/examples/pie-example.cc
+`src/traffic-control/examples/pie-example.cc`
 
 and should be executed as
 
-./waf --run "pie-example --queueDiscType=MADPIE"
+`./waf --run "pie-example --queueDiscType=MADPIE"`
 
 
 ### References
